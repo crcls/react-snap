@@ -15,7 +15,7 @@ const twentyKb = 20 * 1024;
 const defaultOptions = {
   //# stable configurations
   port: 45678,
-  source: "build",
+  source: "dist",
   destination: null,
   concurrency: 4,
   include: ["/"],
@@ -33,7 +33,7 @@ const defaultOptions = {
   minifyCss: {},
   minifyHtml: {
     collapseBooleanAttributes: true,
-    collapseWhitespace: true,
+    collapseWhitespace: false,
     decodeEntities: true,
     keepClosingSlash: true,
     sortAttributes: true,
@@ -47,17 +47,17 @@ const defaultOptions = {
   sourceMaps: true,
   //# workarounds
   // using CRA1 for compatibility with previous version will be changed to false in v2
-  fixWebpackChunksIssue: "CRA1",
+  fixWebpackChunksIssue: false,
   removeBlobs: true,
   fixInsertRule: true,
-  skipThirdPartyRequests: false,
+  skipThirdPartyRequests: true,
   cacheAjaxRequests: false,
   http2PushManifest: false,
   // may use some glob solution in the future, if required
   // works when http2PushManifest: true
   ignoreForPreload: ["service-worker.js"],
   //# unstable configurations
-  preconnectThirdParty: true,
+  preconnectThirdParty: false,
   // Experimental. This config stands for two strategies inline and critical.
   // TODO: inline strategy can contain errors, like, confuse relative urls
   inlineCss: false,

@@ -245,7 +245,7 @@ const crawl = async opt => {
         } finally {
           tracker.dispose();
         }
-        if (options.waitFor) await page.waitFor(options.waitFor);
+        if (options.waitFor) await page.waitForTimeout(options.waitFor);
         if (options.crawl) {
           const links = await getLinks({ page });
           links.forEach(addToQueue);

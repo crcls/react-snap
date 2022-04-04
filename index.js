@@ -599,6 +599,7 @@ const fixFormFields = ({ page }) => {
 };
 
 const saveAsHtml = async ({ page, filePath, options, route, fs }) => {
+  if (options.waitFor) await page.waitForTimeout(options.waitFor)
   let content = await page.content();
   content = content.replace(/react-snap-onload/g, "onload");
   const title = await page.title();

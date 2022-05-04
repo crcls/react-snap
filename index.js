@@ -784,7 +784,7 @@ const run = async (userOptions, { fs } = { fs: nativeFs }) => {
       });
     },
     afterFetch: async ({ page, route, browser, addToQueue }) => {
-      if (options.debug) console.log(results)
+      if (options.debug) console.log(debugResults)
       const pageUrl = `${basePath}${route}`;
       if (options.removeStyleTags) await removeStyleTags({ page });
       if (options.removeScriptTags) await removeScriptTags({ page });

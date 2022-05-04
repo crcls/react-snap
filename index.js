@@ -14,7 +14,7 @@ const twentyKb = 20 * 1024;
 
 const defaultOptions = {
   //# stable configurations
-  basePath: null,
+  debug: false,
   port: 45678,
   source: "dist",
   destination: null,
@@ -692,14 +692,13 @@ const run = async (userOptions, { fs } = { fs: nativeFs }) => {
 
   const server = options.externalServer ? null : startServer(options);
 
-  let basePath = `http://localhost:${options.port}`;
-  if (options.basePath) {
-    basePath += options.basePath
-  }
+  const basePath = `http://localhost:${options.port}`;
   const publicPath = options.publicPath;
   const ajaxCache = {};
   const { http2PushManifest } = options;
   const http2PushManifestItems = {};
+
+  let debugResults = []
 
   await crawl({
     options,
@@ -732,8 +731,60 @@ const run = async (userOptions, { fs } = { fs: nativeFs }) => {
         ajaxCache[route] = ac;
         http2PushManifestItems[route] = hpm;
       }
+
+      debugResults = []; // reset results
+
+      let paused = false;
+      let pausedRequests = [];
+
+      const nextRequest = () => { // continue the next request or "unpause"
+          if (pausedRequests.length === 0) {
+              paused = false;
+          } else {
+              // continue first request in "queue"
+              (pausedRequests.shift())(); // calls the request.continue function
+          }
+      };
+
+      await page.setRequestInterception(true);
+      page.on('request', request => {
+          if (paused) {
+              pausedRequests.push(() => request.continue());
+          } else {
+              paused = true; // pause, as we are processing a request now
+              request.continue();
+          }
+      });
+
+      page.on('requestfinished', async (request) => {
+          const response = await request.response();
+
+          const responseHeaders = response.headers();
+          let responseBody;
+          if (request.redirectChain().length === 0) {
+              // body can only be access for non-redirect responses
+              responseBody = await response.buffer();
+          }
+
+          const information = {
+              url: request.url(),
+              requestHeaders: request.headers(),
+              requestPostData: request.postData(),
+              responseHeaders: responseHeaders,
+              responseSize: responseHeaders['content-length'],
+              responseBody: responseBody.toString('utf8'),
+          };
+          debugResults.push(information);
+
+          nextRequest(); // continue with next request
+      });
+      page.on('requestfailed', (request) => {
+          // handle failed request
+          nextRequest();
+      });
     },
     afterFetch: async ({ page, route, browser, addToQueue }) => {
+      if (options.debug) console.log(results)
       const pageUrl = `${basePath}${route}`;
       if (options.removeStyleTags) await removeStyleTags({ page });
       if (options.removeScriptTags) await removeScriptTags({ page });

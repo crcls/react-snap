@@ -732,56 +732,58 @@ const run = async (userOptions, { fs } = { fs: nativeFs }) => {
         http2PushManifestItems[route] = hpm;
       }
 
-      debugResults = []; // reset results
+      if (options.debug) {
+        debugResults = []; // reset results
 
-      let paused = false;
-      let pausedRequests = [];
+        let paused = false;
+        let pausedRequests = [];
 
-      const nextRequest = () => { // continue the next request or "unpause"
-          if (pausedRequests.length === 0) {
-              paused = false;
-          } else {
-              // continue first request in "queue"
-              (pausedRequests.shift())(); // calls the request.continue function
-          }
-      };
+        const nextRequest = () => { // continue the next request or "unpause"
+            if (pausedRequests.length === 0) {
+                paused = false;
+            } else {
+                // continue first request in "queue"
+                (pausedRequests.shift())(); // calls the request.continue function
+            }
+        };
 
-      await page.setRequestInterception(true);
-      page.on('request', request => {
-          if (paused) {
-              pausedRequests.push(() => request.continue());
-          } else {
-              paused = true; // pause, as we are processing a request now
-              request.continue();
-          }
-      });
+        await page.setRequestInterception(true);
+        page.on('request', request => {
+            if (paused) {
+                pausedRequests.push(() => request.continue());
+            } else {
+                paused = true; // pause, as we are processing a request now
+                request.continue();
+            }
+        });
 
-      page.on('requestfinished', async (request) => {
-          const response = await request.response();
+        page.on('requestfinished', async (request) => {
+            const response = await request.response();
 
-          const responseHeaders = response.headers();
-          let responseBody;
-          if (request.redirectChain().length === 0) {
-              // body can only be access for non-redirect responses
-              responseBody = await response.buffer();
-          }
+            const responseHeaders = response.headers();
+            let responseBody;
+            if (request.redirectChain().length === 0) {
+                // body can only be access for non-redirect responses
+                responseBody = await response.buffer();
+            }
 
-          const information = {
-              url: request.url(),
-              requestHeaders: request.headers(),
-              requestPostData: request.postData(),
-              responseHeaders: responseHeaders,
-              responseSize: responseHeaders['content-length'],
-              responseBody: responseBody.toString('utf8'),
-          };
-          debugResults.push(information);
+            const information = {
+                url: request.url(),
+                requestHeaders: request.headers(),
+                requestPostData: request.postData(),
+                responseHeaders: responseHeaders,
+                responseSize: responseHeaders['content-length'],
+                responseBody: responseBody.toString('utf8'),
+            };
+            debugResults.push(information);
 
-          nextRequest(); // continue with next request
-      });
-      page.on('requestfailed', (request) => {
-          // handle failed request
-          nextRequest();
-      });
+            nextRequest(); // continue with next request
+        });
+        page.on('requestfailed', (request) => {
+            // handle failed request
+            nextRequest();
+        });
+      }
     },
     afterFetch: async ({ page, route, browser, addToQueue }) => {
       if (options.debug) console.log(debugResults)

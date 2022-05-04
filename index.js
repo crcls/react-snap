@@ -661,7 +661,7 @@ const run = async (userOptions, { fs } = { fs: nativeFs }) => {
   );
   const startServer = options => {
     const app = express()
-      .use(options.publicPath, serveStatic(sourceDir))
+      .use(serveStatic(sourceDir))
       .use(fallback("200.html", { root: sourceDir }));
     const server = http.createServer(app);
     server.listen(options.port);

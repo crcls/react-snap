@@ -692,7 +692,7 @@ const run = async (userOptions, { fs } = { fs: nativeFs }) => {
 
   const server = options.externalServer ? null : startServer(options);
 
-  const basePath = `http://localhost:${options.port}`;
+  let basePath = `http://localhost:${options.port}`;
   if (options.basePath) {
     basePath += options.basePath
   }
